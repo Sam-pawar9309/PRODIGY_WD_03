@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic Tac Toe</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
+
+    :root {
+      --bg: linear-gradient(145deg, #141e30, #243b55);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --text: #f0f0f0;
+      --accent: #1b6a6e;
+      --accent-hover: #3b7f81;
+      --cell-bg: rgba(255, 255, 255, 0.07);
+      --cell-border: rgba(255, 255, 255, 0.1);
+      --glass-blur: 8px;
+    }
+
+    body.light {
+      --bg: linear-gradient(145deg, #cbc9c9, #c9c0c0);
+      --card-bg: #ffeded;
+      --text: #0e0d0d;
+      --accent:#3a4b52;
+      --accent-hover: #68848e;
+      --cell-bg: rgba(5, 1, 1, 0.05);
+      --cell-border: rgba(7, 6, 6, 0.1);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      transition: all 0.4s ease;
+    }
+
+    .game-container {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      border-radius: 25px;
+      padding: 30px;
+      width: 350px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+    }
+
+    h1 .x { color: #f06292; }
+    h1 .o { color: #4dd0e1; }
+
+    #status {
+      font-size: 1.1rem;
+      margin: 10px 0 20px;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 10px 0 25px;
+    }
+
+    .cell {
+      background-color: var(--cell-bg);
+      border: 1px solid var(--cell-border);
+      font-size: 2.5rem;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      aspect-ratio: 1 / 1;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .cell:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
+    }
+
+    .cell.win-animation {
+     background-color: #708a94; 
+     color: #000000; 
+     animation: winAnimation 0.5s ease-in-out forwards;
+    }
+
+
+    #scoreboard {
+      font-weight: 500;
+      margin-bottom: 20px;
+      font-size: 1rem;
+    }
+
+    .btns {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      flex: 1 1 48%;
+      padding: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      background-color: var(--accent);
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+    .mode-label {
+      font-size: 0.9rem;
+      margin-top: 5px;
+      opacity: 0.8;
+    }
+
+    .top-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="top-buttons">
+      <button onclick="toggleMode()" id="modeBtn">🧠 AI Mode</button>
+      <button onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+    </div>
+    <h1><span class="x">❌</span> Tic Tac Toe <span class="o">⭕</span></h1>
+    <div id="status">Your Turn!</div>
+    <div id="board"></div>
+    <div id="scoreboard">You: <span id="playerScore">0</span> | Opponent: <span id="aiScore">0</span></div>
+    <div class="btns">
+      <button onclick="resetGame()">🔄 Reset</button>
+    </div>
+    <div class="mode-label" id="modeLabel">Currently Playing vs AI</div>
+  </div>
+
+  <script>
+    const board = document.getElementById("board");
+    const statusText = document.getElementById("status");
+    const playerScoreEl = document.getElementById("playerScore");
+    const aiScoreEl = document.getElementById("aiScore");
+    const modeBtn = document.getElementById("modeBtn");
+    const modeLabel = document.getElementById("modeLabel");
+    const themeBtn = document.getElementById("themeBtn");
+
+    let cells;
+    let currentPlayer = "X";
+    let boardState;
+    let isGameOver = false;
+    let isAI = true;
+    let playerScore = 0;
+    let aiScore = 0;
+
+    function initializeBoard() {
+      board.innerHTML = "";
+      boardState = Array(9).fill("");
+      isGameOver = false;
+      currentPlayer = "X";
+      statusText.textContent = "Your Turn!";
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index = i;
+        cell.addEventListener("click", handleCellClick);
+        board.appendChild(cell);
+      }
+      cells = document.querySelectorAll(".cell");
+    }
+
+    function handleCellClick(e) {
+      const index = e.target.dataset.index;
+      if (isGameOver || boardState[index] !== "") return;
+      makeMove(index, currentPlayer);
+      if (checkWin(currentPlayer)) return endGame(currentPlayer);
+      if (boardState.every(cell => cell !== "")) return endGame();
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+      statusText.textContent = isAI && currentPlayer === "O" ? "AI's Turn..." : `Player ${currentPlayer}'s Turn`;
+      if (isAI && currentPlayer === "O") setTimeout(aiMove, 400);
+    }
+
+    function makeMove(index, player) {
+      boardState[index] = player;
+      cells[index].textContent = player === "X" ? "❌" : "⭕";
+    }
+
+    function aiMove() {
+      const index = getBestMove();
+      makeMove(index, "O");
+      if (checkWin("O")) return endGame("O");
+      if (boardState.every(cell => cell !== "")) return endGame();
+      currentPlayer = "X";
+      statusText.textContent = "Your Turn!";
+    }
+
+    function getBestMove() {
+      let bestScore = -Infinity;
+      let move;
+      for (let i = 0; i < 9; i++) {
+        if (boardState[i] === "") {
+          boardState[i] = "O";
+          let score = minimax(boardState, 0, false);
+          boardState[i] = "";
+          if (score > bestScore) {
+            bestScore = score;
+            move = i;
+          }
+        }
+      }
+      return move;
+    }
+
+    function minimax(newBoard, depth, isMaximizing) {
+      if (checkWin("O", newBoard)) return 10 - depth;
+      if (checkWin("X", newBoard)) return depth - 10;
+      if (newBoard.every(cell => cell !== "")) return 0;
+      let scores = [];
+      for (let i = 0; i < 9; i++) {
+        if (newBoard[i] === "") {
+          newBoard[i] = isMaximizing ? "O" : "X";
+          scores.push(minimax(newBoard, depth + 1, !isMaximizing));
+          newBoard[i] = "";
+        }
+      }
+      return isMaximizing ? Math.max(...scores) : Math.min(...scores);
+    }
+
+    function checkWin(player, customBoard = boardState) {
+      const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+      return winPatterns.some(pattern =>
+        pattern.every(index => customBoard[index] === player)
+      );
+    }
+
+    function getWinPattern(player) {
+      const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+      return winPatterns.find(pattern =>
+        pattern.every(index => boardState[index] === player)
+      );
+    }
+
+    function endGame(winner) {
+      isGameOver = true;
+      if (winner) {
+        const pattern = getWinPattern(winner);
+        pattern?.forEach(index => cells[index].classList.add("win-animation"));
+        statusText.textContent = winner === "X" ? "🎉 You Win!" : (isAI ? "😔 AI Wins!" : "🎉 Player O Wins!");
+        if (winner === "X") playerScore++;
+        else aiScore++;
+      } else {
+        statusText.textContent = "🤝 It's a Draw!";
+      }
+      playerScoreEl.textContent = playerScore;
+      aiScoreEl.textContent = aiScore;
+    }
+
+   function resetGame() {
+   initializeBoard();
+   playerScore = 0;
+   aiScore = 0;
+   playerScoreEl.textContent = playerScore;
+   aiScoreEl.textContent = aiScore;
+   statusText.textContent = "Your Turn!";
+}
+    function toggleMode() {
+      isAI = !isAI;
+      resetGame();
+      modeBtn.textContent = isAI ? "🧠 AI Mode" : "🧑‍🤝‍🧑 Friend Mode";
+      modeLabel.textContent = isAI ? "Currently Playing vs AI" : "Currently Playing with Friend";
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+      const isLight = document.body.classList.contains("light");
+      themeBtn.textContent = isLight ? "🌞 Light" : "🌙 Dark";
+    }
+
+    initializeBoard();
+  </script>
+</body>
+</html>
