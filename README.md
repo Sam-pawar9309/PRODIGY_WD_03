@@ -19,7 +19,7 @@ As part of my Web Development Internship with Prodigy InfoTech, I built a fully 
 🔊 Sound effects for interaction (optional)
 <br>
 🎉 Smooth animations and responsive layout
-<br>
+<br> <br> 
 📂 Technologies Used:-
 <br>
 HTML | CSS | JavaScript
